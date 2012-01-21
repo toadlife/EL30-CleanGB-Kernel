@@ -189,7 +189,8 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
 ARCH		?= arm
-CROSS_COMPILE	?= /opt/toolchains/arm-2009q3/bin/arm-none-linux-gnueabi-
+#CROSS_COMPILE	?= /home/paul/CodeSourcery/Sourcery_G++_Lite/bin/arm-none-eabi-
+CROSS_COMPILE	?= /home/paul/android/prebuilt/linux-x86/toolchain/arm-eabi-4.4.3/bin/arm-eabi-
 
 
 # Architecture as present in compile.h
@@ -915,6 +916,7 @@ endif
 prepare2: prepare3 outputmakefile
 
 prepare1: prepare2 include/linux/version.h include/generated/utsrelease.h \
+                   include/generated/kernelversion.h \
                    include/config/auto.conf
 	$(cmd_crmodverdir)
 
@@ -948,11 +950,18 @@ define filechk_version.h
 	echo '#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))';)
 endef
 
+define filechk_kernelversion.h
+	(echo \#define KERNELVERSION \"$(KERNELVERSION)\";)
+endef
+
 include/linux/version.h: $(srctree)/Makefile FORCE
 	$(call filechk,version.h)
 
 include/generated/utsrelease.h: include/config/kernel.release FORCE
 	$(call filechk,utsrelease.h)
+
+include/generated/kernelversion.h: $(srctree)/Makefile FORCE
+	$(call filechk,kernelversion.h)
 
 PHONY += headerdep
 headerdep:
