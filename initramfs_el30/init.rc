@@ -201,7 +201,7 @@ on fs
     insmod /lib/modules/wimax_gpio.ko
     insmod /lib/modules/cmc7xx_sdio.ko
 #root
-    chown root system /sbin/su
+    chown root root /sbin/su
     symlink /sbin/busybox /sbin/recovery
     chown root root /sbin/Superuser.apk
     chown root system /sbin/busybox

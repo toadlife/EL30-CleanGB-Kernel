@@ -21,10 +21,15 @@ if busybox [ ! -f /system/bin/su ]; then
   busybox ln -s /system/bin/su /system/xbin/su
   busybox rm /sbin/su
   chown root.root /system/bin/su
+  chown root.root /system/xbin/su
   chmod 6755 /system/bin/su
+  chmod 06755 /system/xbin/su
 else
   chown root.root /system/bin/su
-  chmod 6755 /system/bin/su
+  chown root.root /system/xbin/su
+  chmod 06755 /system/bin/su
+  chmod 06755 /system/xbin/su
+
 fi
 
 
