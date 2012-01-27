@@ -111,13 +111,14 @@ service ueventd /sbin/ueventd
 
 #service recovery /sbin/recovery
 #service recovery /system/bin/recovery
+
+
 chmod 755 /sbin/recovery.sh
 service sdx /sbin/recovery.sh   
 critical
 user root 
 oneshot
-service adbd /sbin/adbd recovery
-    disabled
+
 service adbd /sbin/adbd recovery
     disabled
 
