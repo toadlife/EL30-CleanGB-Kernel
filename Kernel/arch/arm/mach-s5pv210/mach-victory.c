@@ -154,11 +154,11 @@ static int victory_notifier_call(struct notifier_block *this,
 
 	if ((code == SYS_RESTART) && _cmd) {
 		if (!strcmp((char *)_cmd, "recovery"))
-			poke_rec_boot_magic();
+			mode = REBOOT_MODE_ARM11_FOTA;
 		else if (!strcmp((char *)_cmd, "arm9_fota"))
 			mode = REBOOT_MODE_ARM9_FOTA;
 		else if (!strcmp((char *)_cmd, "arm11_fota"))
-			poke_rec_boot_magic();
+			mode = REBOOT_MODE_ARM11_FOTA;
 		else if (!strcmp((char *)_cmd, "bml7recovery"))
 			mode = REBOOT_MODE_RECOVERY;
 		else if (!strcmp((char *)_cmd, "bootloader"))
