@@ -147,6 +147,25 @@ struct wifi_mem_prealloc {
 	unsigned long size;
 };
 
+/* REC_BOOT_MAGIC is poked into REC_BOOT_ADDR on reboot(..., "recovery") to
+ * flag stage1 init to load the recovery image.  This address is located in
+ * the last 4 kB of unmapped RAM, shared with the kexec hardboot page and
+ * pmstats. */
+#define REC_BOOT_ADDR  0x57fff800
+#define REC_BOOT_MAGIC 0x5EC0B007
+
+static void poke_rec_boot_magic(void)
+{
+	unsigned int __iomem *rec_boot_mem;
+
+	if ((rec_boot_mem = ioremap(REC_BOOT_ADDR, sizeof(*rec_boot_mem))) == NULL)
+		/* Can't do much about this. */
+		return;
+
+	writel(REC_BOOT_MAGIC, rec_boot_mem);
+	iounmap(rec_boot_mem);
+}
+
 static int victory_notifier_call(struct notifier_block *this,
 					unsigned long code, void *_cmd)
 {
@@ -154,11 +173,11 @@ static int victory_notifier_call(struct notifier_block *this,
 
 	if ((code == SYS_RESTART) && _cmd) {
 		if (!strcmp((char *)_cmd, "recovery"))
-			mode = REBOOT_MODE_ARM11_FOTA;
+			poke_rec_boot_magic();
 		else if (!strcmp((char *)_cmd, "arm9_fota"))
 			mode = REBOOT_MODE_ARM9_FOTA;
 		else if (!strcmp((char *)_cmd, "arm11_fota"))
-			mode = REBOOT_MODE_ARM11_FOTA;
+			poke_rec_boot_magic();
 		else if (!strcmp((char *)_cmd, "bml7recovery"))
 			mode = REBOOT_MODE_RECOVERY;
 		else if (!strcmp((char *)_cmd, "bootloader"))
@@ -169,6 +188,17 @@ static int victory_notifier_call(struct notifier_block *this,
 			mode = REBOOT_MODE_NONE;
 		else
 			mode = REBOOT_MODE_NONE;
+		
+		/* Check reboot command again and set reboot mode. This
+		 * allows the kernel to reboot to recovery in both BML
+		 * and MTD configurations. There is probably a better 
+		 * way to do this but...
+		 */
+		
+		if (!strcmp((char *)_cmd, "recovery"))
+			mode = REBOOT_MODE_ARM11_FOTA;
+		else if (!strcmp((char *)_cmd, "arm11_fota"))
+			mode = REBOOT_MODE_ARM11_FOTA;
 
 #ifdef CONFIG_KERNEL_DEBUG_SEC 
 		//etinum.factory.reboot disable uart msg in bootloader for
@@ -3142,7 +3172,9 @@ static struct platform_device *victory_devices[] __initdata = {
 #ifdef CONFIG_FIQ_DEBUGGER
 	&s5pv210_device_fiqdbg_uart2,
 #endif
-	&s5pc110_device_onenand,
+#ifdef CONFIG_MTD_ONENAND
+    &s5p_device_onenand,
+#endif
 #ifdef CONFIG_RTC_DRV_S3C
 	&s5p_device_rtc,
 #endif
@@ -3261,7 +3293,7 @@ static void __init victory_map_io(void)
 	s3c24xx_init_uarts(victory_uartcfgs, ARRAY_SIZE(victory_uartcfgs));
 	s5p_reserve_bootmem(victory_media_devs, ARRAY_SIZE(victory_media_devs));
 #ifdef CONFIG_MTD_ONENAND
-	s5pc110_device_onenand.name = "s5pc110-onenand";
+	s5p_device_onenand.name = "s5p-onenand";
 #endif
 }
 
