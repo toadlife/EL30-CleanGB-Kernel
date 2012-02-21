@@ -29,12 +29,16 @@
 #include <linux/completion.h>
 #include <linux/mutex.h>
 
+#ifdef CONFIG_MACH_VICTORY
+#include <mach/cpu-freq-v210.h>
+#endif
+
 #define dprintk(msg...) cpufreq_debug_printk(CPUFREQ_DEBUG_CORE, \
 						"cpufreq-core", msg)
 
-int exp_UV_mV[9];
-extern unsigned int freq_uv_table[9][3];
-int enabled_freqs[9] = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+extern unsigned int freq_uv_table[NUM_FREQ][3];
+int enabled_freqs[NUM_FREQ] = { 0, 0, 0, 1, 1, 1, 1, 1, 1 };
+int exp_UV_mV[NUM_FREQ] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
@@ -651,10 +655,7 @@ static ssize_t show_scaling_setspeed(struct cpufreq_policy *policy, char *buf)
 	return policy->governor->show_setspeed(policy, buf);
 }
 
-/**
- * sysfs interface for Xan's UV application
- */
-
+/* sysfs interface for UV control */
 static ssize_t show_UV_mV_table(struct cpufreq_policy *policy, char *buf) {
 
 	return sprintf(buf, "%d %d %d %d %d %d %d %d %d\n", exp_UV_mV[0], exp_UV_mV[1], exp_UV_mV[2], exp_UV_mV[3], exp_UV_mV[4], exp_UV_mV[5], exp_UV_mV[6], exp_UV_mV[7], exp_UV_mV[8]);
@@ -666,7 +667,7 @@ static ssize_t store_UV_mV_table(struct cpufreq_policy *policy,
 	unsigned int ret = -EINVAL;
 
 	ret = sscanf(buf, "%d %d %d %d %d %d %d %d %d", &exp_UV_mV[0], &exp_UV_mV[1], &exp_UV_mV[2], &exp_UV_mV[3], &exp_UV_mV[4], &exp_UV_mV[5], &exp_UV_mV[6], &exp_UV_mV[7], &exp_UV_mV[8]);
-	if(ret != 1) {
+	if(ret != NUM_FREQ) {
 		return -EINVAL;
 	}
 	else
@@ -714,7 +715,7 @@ static ssize_t store_states_enabled_table(struct cpufreq_policy *policy, const c
 	unsigned int ret = -EINVAL;
 
 	ret = sscanf(buf, "%d %d %d %d %d %d %d %d %d", &enabled_freqs[0], &enabled_freqs[1], &enabled_freqs[2], &enabled_freqs[3], &enabled_freqs[4], &enabled_freqs[5], &enabled_freqs[6], &enabled_freqs[7], &enabled_freqs[8]);
-	if(ret != 1) {
+	if(ret != NUM_FREQ) {
 		return -EINVAL;
 	}
 	else

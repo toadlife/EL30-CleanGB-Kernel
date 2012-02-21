@@ -14,8 +14,14 @@
 #include <linux/init.h>
 #include <linux/cpufreq.h>
 
+#ifdef CONFIG_MACH_VICTORY
+#include <mach/cpu-freq-v210.h>
+#endif
+
 #define dprintk(msg...) \
 	cpufreq_debug_printk(CPUFREQ_DEBUG_CORE, "freq-table", msg)
+
+extern int enabled_freqs[NUM_FREQ];
 
 /*********************************************************************
  *                     FREQUENCY TABLE HELPERS                       *
@@ -127,6 +133,10 @@ int cpufreq_frequency_table_target(struct cpufreq_policy *policy,
 
 	for (i = 0; (table[i].frequency != CPUFREQ_TABLE_END); i++) {
 		unsigned int freq = table[i].frequency;
+
+		if(enabled_freqs[i] == 0) {
+			continue;
+		}
 		if (freq == CPUFREQ_ENTRY_INVALID)
 			continue;
 		if ((freq < policy->min) || (freq > policy->max))
